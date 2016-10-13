@@ -23,7 +23,8 @@ func initcurses() {
     curs_set(0)                 // Set cursor to invisible
     start_color()
     
-    init_pair(1, Int16(COLOR_BLUE), Int16(COLOR_GREEN))
+    init_pair(1, Int16(COLOR_BLACK), Int16(COLOR_GREEN))
+    init_pair(2, Int16(COLOR_YELLOW), Int16(COLOR_RED))
 }
 
 func drawscreen() {
@@ -44,7 +45,6 @@ func drawscreen() {
 }
 
 func drawwindow(label: String, x: Int32, y: Int32, width: Int32, height: Int32) {
-    
     let w = newwin(height, width, y, x)
     box(w, 0, 0)
     
@@ -64,7 +64,7 @@ func drawReport(report: StatusReport, x: Int32, y: Int32) {
     let height: Int32 = 10
     
     let w = newwin(height, width, y, x)
-    box(w, 0, 0)
+    
     
     let label = report.service.endpoint
     
@@ -82,13 +82,37 @@ func drawReport(report: StatusReport, x: Int32, y: Int32) {
     wmove(w, ypos, xpos)
     waddstr(w, "Status: \(report.status)")
     
-    wrefresh(w)
+    switch report.status {
+    case .OK:
+        wbkgd(w, UInt32(COLOR_PAIR(1)))
+    default:
+        wbkgd(w, UInt32(COLOR_PAIR(2)))
+    }
+
+    box(w, 0, 0)
     
+    wrefresh(w)
+
     delwin(w)
 }
 
+func drawTimestamp() {
+    let w = getmaxx(stdscr)
+    let ts = Date().timeIntervalSince1970
+    let label = "UNIX: \(Int(ts))"
+    
+    let xpos: Int32 = w / 2 - 30 / 2
+    let ypos: Int32 = 1
+    
+    drawwindow(label: label,
+               x: xpos,
+               y: ypos,
+               width: 30,
+               height: 3)
+}
+
 func coordsForIndex(index: Int) -> (x: Int32, y: Int32) {
-    return (x: Int32(index * 34 + 4), y: 4)
+    return (x: Int32(index * 34 + 6), y: 4)
     
 }
 
@@ -96,8 +120,7 @@ func mainloop() {
 //    nodelay(stdscr, true)
     timeout(1000/2)
     refresh()
-    
-    var counter: Int = 0
+
     while true {
         
         let reps = homik.reports
@@ -106,12 +129,8 @@ func mainloop() {
             let coords = coordsForIndex(index: idx)
             drawReport(report: rep, x: coords.x, y: coords.y)
         }
-        counter += 1
-        
-        move(0, 0)
-        addstr("iteration: \(counter)")
 
-  
+        drawTimestamp()
         homik.update()
 
         //we should block until we have some event that requires refresh (key press, mouse click, timer forced refresh, etc)
