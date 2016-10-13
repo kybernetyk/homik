@@ -16,8 +16,11 @@ static __inline__ CURLcode curl_easy_setopt_long(CURL *curl, CURLoption option, 
     return curl_easy_setopt(curl, option, param);
 }
 
+//this whole setopt_func business is an ugly hack because I don't know how the func should look
+//like in Swift3...
+//and as we're only interested in wether the server is alive or not we can get away with discarding the
+//data for now
 typedef size_t (*curl_func)(char * ptr, size_t size, size_t num, void * ud);
-
 static __inline__  size_t curl_dummy_func(char * ptr, size_t size, size_t num, void * ud) {
     return size * num;
 }
