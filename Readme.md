@@ -5,5 +5,10 @@ Of course not intended for mission critical stuff. But useful to track local mac
 
 Currently it's barely a prototype...
 
+#Screenshots
+See the screenshots folder. But here's one:
+
+![Homik Screenshot](/screenshots/screen-1.png?raw=true "Homik Screenshot")
+
 #License
 Affero GPL 3
