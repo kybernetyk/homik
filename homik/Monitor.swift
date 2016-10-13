@@ -61,22 +61,23 @@ class Monitor {
     //by the user via the `self.reports` property
     func loop() {
         while true {
-            let ss = self.serviceAccessQueue.sync {
+            let watchlist = self.serviceAccessQueue.sync {
                 return self.services
             }
             
             //for every service we're watching fire a concurrent work item...
-            for s in ss {
+            for service in watchlist {
                 self.networkQueue.async(group: self.networkGroup) {
-                    if let url = URL(string: s.endpoint) {
-                        //this is broken and just a proof of concept...
+                    if let url = URL(string: service.endpoint) {
+                        //this is broken and just a proof of concept... we need proper networking code as this
+                        //will sometimes cache the website and give  false positives.
                         if let result = try? NSString(contentsOf: url, encoding: String.Encoding.utf8.rawValue) {
-                            self.serviceAccessQueue.async {
-                                self.stats[s] = .OK
+                            self.serviceAccessQueue.sync {
+                                self.stats[service] = .OK
                             }
                         } else {
-                            self.serviceAccessQueue.async {
-                                self.stats[s] = .Broken
+                            self.serviceAccessQueue.sync {
+                                self.stats[service] = .Broken
                             }
                         }
                     }
@@ -94,13 +95,13 @@ class Monitor {
     //thread safe getter for the reports
     public var reports: [StatusReport] {
         get {
-            let ss = self.serviceAccessQueue.sync {
+            let watchlist = self.serviceAccessQueue.sync {
                 return self.stats
             }
             
             var reports: [StatusReport] = []
-            for s in ss {
-                let rep = StatusReport(service: s.key, status: s.value)
+            for service in watchlist {
+                let rep = StatusReport(service: service.key, status: service.value)
                 reports.append(rep)
             }
             return reports
