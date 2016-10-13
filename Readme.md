@@ -6,7 +6,7 @@ Of course not intended for mission critical stuff. But useful to track local mac
 Currently it's barely a prototype...
 
 #Screenshots
-See the screenshots folder. But here's one:
+See the screenshots folder. But here's one (the upper left window):
 
 ![Homik Screenshot](/screenshots/screen-4.png?raw=true "Homik Screenshot")
 
