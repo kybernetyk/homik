@@ -99,7 +99,7 @@ func drawReport(report: StatusReport, x: Int32, y: Int32) {
 func drawTimestamp() {
     let w = getmaxx(stdscr)
     let ts = Date().timeIntervalSince1970
-    let label = "UNIX: \(Int(ts))"
+    let label = "UNIX: \(ts)"
     
     let xpos: Int32 = w / 2 - 30 / 2
     let ypos: Int32 = 1
@@ -117,24 +117,29 @@ func coordsForIndex(index: Int) -> (x: Int32, y: Int32) {
 }
 
 func mainloop() {
-//    nodelay(stdscr, true)
+
+    //let ncurses break the getch() wait loop every 500ms
     timeout(1000/2)
     refresh()
 
+    //do the network stuff in the background
+    homik.start()
+    
+    
+
     while true {
-        
         let reps = homik.reports
-        
         for (idx, rep) in reps.enumerated() {
             let coords = coordsForIndex(index: idx)
             drawReport(report: rep, x: coords.x, y: coords.y)
         }
 
         drawTimestamp()
-        homik.update()
 
-        //we should block until we have some event that requires refresh (key press, mouse click, timer forced refresh, etc)
-        //probably write a signal handler or use libev directly
+        //block the ui thread for 500ms...
+        //in future we should block until we have some event that requires refresh (key press, mouse click, timer forced refresh, etc)
+        //probably write a signal handler or use libev directly. as this is only the UI thread this won't disturb the network stuff
+        //also check out dispatchMain() as an alternative
         switch getch() {
             
         case Int32(UnicodeScalar("q").value):

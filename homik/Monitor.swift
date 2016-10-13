@@ -5,7 +5,6 @@
 //  Created by kyb on 09/10/2016.
 //  Copyright © 2016 Suborbital Softowrks Ltd. All rights reserved.
 //
-
 import Foundation
 import Dispatch
 
@@ -39,49 +38,63 @@ func ==(lh: ServiceDescription, rh: ServiceDescription) -> Bool {
     return lh.endpoint.lowercased() == rh.endpoint.lowercased()
 }
 
+//the monitor is the meat of the application. it handles concurrent server checking
+//and report generation
 class Monitor {
-    fileprivate var services: [ServiceDescription] = []
-    fileprivate var networkQueue = DispatchQueue(label: "Monitor.Network", attributes: .concurrent)
-    fileprivate var updateQueue = DispatchQueue(label: "Monitor.Update")
-    
-    fileprivate var stats: [ServiceDescription : StatusReport.Status] = [:]
-    
+    //add a service to the watchlist
     func addService(service: ServiceDescription) {
-        updateQueue.sync {
+        self.serviceAccessQueue.sync {
             self.services.append(service)
             self.stats[service] = .Broken
         }
     }
     
-    //starts the async loop in a bg queue
-    //if there's news regarding the endpoints
-    //the reports array will be updated (mutex)
-    //we won't fire an event for now
-    //so the user has to poll us
-    //but firing event signals, etc is a possibility in the future
-    func run() {
-        let ss = updateQueue.sync {
-            return self.services
-        }
-
-        for s in ss {
-            if let url = URL(string: s.endpoint) {
-                if let result = try? NSString(contentsOf: url, encoding: String.Encoding.utf8.rawValue) {
-                    updateQueue.sync {
-                        self.stats[s] = .OK
-                    }
-                } else {
-                    updateQueue.sync {
-                        self.stats[s] = .Broken
-                    }
-                }
-            }
+    //start the endless update loop loop
+    func start() {
+        self.honkqueue.async {
+            self.loop()
         }
     }
     
-    var reports: [StatusReport] {
+    //loops endlessly and checks each watched service every N seconds
+    //the status is then saved into `self.stats` which can be accessed
+    //by the user via the `self.reports` property
+    func loop() {
+        while true {
+            let ss = self.serviceAccessQueue.sync {
+                return self.services
+            }
+            
+            //for every service we're watching fire a concurrent work item...
+            for s in ss {
+                self.networkQueue.async(group: self.networkGroup) {
+                    if let url = URL(string: s.endpoint) {
+                        //this is broken and just a proof of concept...
+                        if let result = try? NSString(contentsOf: url, encoding: String.Encoding.utf8.rawValue) {
+                            self.serviceAccessQueue.async {
+                                self.stats[s] = .OK
+                            }
+                        } else {
+                            self.serviceAccessQueue.async {
+                                self.stats[s] = .Broken
+                            }
+                        }
+                    }
+                }
+            }
+            
+            //wait till all services have been checked
+            self.networkGroup.wait()
+            
+            //now sleep for 5 seconds till we can perform the next check...
+            sleep(5)
+        }
+    }
+    
+    //thread safe getter for the reports
+    public var reports: [StatusReport] {
         get {
-            let ss = updateQueue.sync {
+            let ss = self.serviceAccessQueue.sync {
                 return self.stats
             }
             
@@ -93,4 +106,16 @@ class Monitor {
             return reports
         }
     }
+    
+    
+    fileprivate var services: [ServiceDescription] = []
+    
+    fileprivate var networkQueue = DispatchQueue(label: "Monitor.Network", attributes: .concurrent)
+    fileprivate var networkGroup = DispatchGroup()
+    
+    fileprivate var serviceAccessQueue = DispatchQueue(label: "Monitor.Update")
+    fileprivate var honkqueue = DispatchQueue(label: "Monitor.Update")
+    
+    
+    fileprivate var stats: [ServiceDescription : StatusReport.Status] = [:]
 }
