@@ -41,6 +41,20 @@ func ==(lh: ServiceDescription, rh: ServiceDescription) -> Bool {
 //the monitor is the meat of the application. it handles concurrent server checking
 //and report generation
 class Monitor {
+    fileprivate var services: [ServiceDescription] = []
+    
+    fileprivate var networkQueue = DispatchQueue(label: "Monitor.Network", attributes: .concurrent)
+    fileprivate var networkGroup = DispatchGroup()
+    
+    fileprivate var serviceAccessQueue = DispatchQueue(label: "Monitor.Update")
+    fileprivate var honkqueue = DispatchQueue(label: "Monitor.Update")
+    
+    
+    fileprivate var stats: [ServiceDescription : StatusReport.Status] = [:]
+}
+
+//MARK: - public iface
+extension Monitor {
     //add a service to the watchlist
     func addService(service: ServiceDescription) {
         self.serviceAccessQueue.sync {
@@ -53,42 +67,6 @@ class Monitor {
     func start() {
         self.honkqueue.async {
             self.loop()
-        }
-    }
-    
-    //loops endlessly and checks each watched service every N seconds
-    //the status is then saved into `self.stats` which can be accessed
-    //by the user via the `self.reports` property
-    func loop() {
-        while true {
-            let watchlist = self.serviceAccessQueue.sync {
-                return self.services
-            }
-            
-            //for every service we're watching fire a concurrent work item...
-            for service in watchlist {
-                self.networkQueue.async(group: self.networkGroup) {
-                    if let url = URL(string: service.endpoint) {
-                        //this is broken and just a proof of concept... we need proper networking code as this
-                        //will sometimes cache the website and give  false positives.
-                        if let result = try? NSString(contentsOf: url, encoding: String.Encoding.utf8.rawValue) {
-                            self.serviceAccessQueue.sync {
-                                self.stats[service] = .OK
-                            }
-                        } else {
-                            self.serviceAccessQueue.sync {
-                                self.stats[service] = .Broken
-                            }
-                        }
-                    }
-                }
-            }
-            
-            //wait till all services have been checked
-            self.networkGroup.wait()
-            
-            //now sleep for 5 seconds till we can perform the next check...
-            sleep(5)
         }
     }
     
@@ -107,16 +85,49 @@ class Monitor {
             return reports
         }
     }
+
+}
+
+//MARK: - work scheduling
+extension Monitor {
+    //loops endlessly and checks each watched service every N seconds
+    //the status is then saved into `self.stats` which can be accessed
+    //by the user via the `self.reports` property
+    fileprivate func loop() {
+        while true {
+            let watchlist = self.serviceAccessQueue.sync {
+                return self.services
+            }
+            
+            //for every service we're watching fire a concurrent work item...
+            for service in watchlist {
+                self.networkQueue.async(group: self.networkGroup) {
+                    
+                    let result = self.httpConnect(url: service.endpoint)
+                    self.serviceAccessQueue.sync {
+                        self.stats[service] = result ? .OK : .Broken
+                    }
+                    
+                }
+            }
+            
+            //wait till all services have been checked
+            self.networkGroup.wait()
+            
+            //now sleep for 5 seconds till we can perform the next check...
+            sleep(5)
+        }
+    }
     
-    
-    fileprivate var services: [ServiceDescription] = []
-    
-    fileprivate var networkQueue = DispatchQueue(label: "Monitor.Network", attributes: .concurrent)
-    fileprivate var networkGroup = DispatchGroup()
-    
-    fileprivate var serviceAccessQueue = DispatchQueue(label: "Monitor.Update")
-    fileprivate var honkqueue = DispatchQueue(label: "Monitor.Update")
-    
-    
-    fileprivate var stats: [ServiceDescription : StatusReport.Status] = [:]
+}
+
+//MARK: - http
+extension Monitor {
+    fileprivate func httpConnect(url: String) -> Bool {
+        if let url = URL(string: url) {
+            let result = try? NSString(contentsOf: url, encoding: String.Encoding.utf8.rawValue)
+            return result != nil
+        }
+        return false
+    }
 }
