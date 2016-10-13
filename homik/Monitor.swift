@@ -51,6 +51,7 @@ class Monitor {
     
     
     fileprivate var stats: [ServiceDescription : StatusReport.Status] = [:]
+    
 }
 
 //MARK: - public iface
@@ -121,13 +122,17 @@ extension Monitor {
     
 }
 
+
 //MARK: - http
 extension Monitor {
     fileprivate func httpConnect(url: String) -> Bool {
-        if let url = URL(string: url) {
-            let result = try? NSString(contentsOf: url, encoding: String.Encoding.utf8.rawValue)
-            return result != nil
-        }
-        return false
+        let hdl = curl_easy_init()
+        curl_easy_setopt_string(hdl, CURLOPT_URL, url)
+        curl_easy_setopt_long(hdl, CURLOPT_VERBOSE, 0)
+        curl_easy_setopt_func(hdl)
+        let success = curl_easy_perform(hdl)
+        curl_easy_cleanup(hdl)
+        
+        return (success == CURLE_OK)
     }
 }

@@ -11,6 +11,7 @@
 		0D2EA3511DAA7B2000FA3982 /* Homik.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2EA3501DAA7B2000FA3982 /* Homik.swift */; };
 		0D2EA3531DAA7DC000FA3982 /* Monitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2EA3521DAA7DC000FA3982 /* Monitor.swift */; };
 		0D2EA3561DAA82A400FA3982 /* libncurses.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D2EA3551DAA82A400FA3982 /* libncurses.tbd */; };
+		0D2EA3581DAF8C6C00FA3982 /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D2EA3571DAF8C6C00FA3982 /* libcurl.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +32,8 @@
 		0D2EA3501DAA7B2000FA3982 /* Homik.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Homik.swift; sourceTree = "<group>"; };
 		0D2EA3521DAA7DC000FA3982 /* Monitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Monitor.swift; sourceTree = "<group>"; };
 		0D2EA3551DAA82A400FA3982 /* libncurses.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libncurses.tbd; path = usr/lib/libncurses.tbd; sourceTree = SDKROOT; };
+		0D2EA3571DAF8C6C00FA3982 /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
+		0D2EA35A1DAF8F3D00FA3982 /* Curl-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Curl-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D2EA3581DAF8C6C00FA3982 /* libcurl.tbd in Frameworks */,
 				0D2EA3561DAA82A400FA3982 /* libncurses.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -48,6 +52,7 @@
 		0D2EA33C1DAA7A9800FA3982 = {
 			isa = PBXGroup;
 			children = (
+				0D2EA35A1DAF8F3D00FA3982 /* Curl-Bridging-Header.h */,
 				0D2EA3471DAA7A9800FA3982 /* homik */,
 				0D2EA3461DAA7A9800FA3982 /* Products */,
 				0D2EA3541DAA82A300FA3982 /* Frameworks */,
@@ -83,6 +88,7 @@
 		0D2EA3541DAA82A300FA3982 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0D2EA3571DAF8C6C00FA3982 /* libcurl.tbd */,
 				0D2EA3551DAA82A400FA3982 /* libncurses.tbd */,
 			);
 			name = Frameworks;
@@ -250,6 +256,7 @@
 				DEVELOPMENT_TEAM = V4B772B3P8;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Curl-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -260,6 +267,7 @@
 				DEVELOPMENT_TEAM = V4B772B3P8;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Curl-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
