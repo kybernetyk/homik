@@ -3,7 +3,8 @@ So this is essentially my "let's learn ncurses" project. When (if) this project 
 
 Of course not intended for mission critical stuff. But useful to track local machines, etc. (And running stuff in your terminal gives you extra hacker cred of course).
 
-Currently it's barely a prototype...
+#Current Status
+Currently it's barely a prototype... the UI code is non-existent, the network code is comically broken. The only thing that works is concurrency (thanks to the great libdispatch - best piece of software engineering in the last 10 years or so!).
 
 #Screenshots
 See the screenshots folder. But here's one (the upper left window):
