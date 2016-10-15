@@ -9,7 +9,7 @@ Currently it's barely a prototype... the UI code is non-existent, the network co
 #Screenshots
 See the screenshots folder. But here's one (the upper left window):
 
-![Homik Screenshot](/screenshots/screen-4.png?raw=true "Homik Screenshot")
+![Homik Screenshot](/screenshots/screen-2.png?raw=true "Homik Screenshot")
 
 #License
 Affero GPL 3
